@@ -15,7 +15,7 @@ const HomePage = () => {
       const finalQuery = query && query.trim() !== "" ? query : "chicken";
       const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${finalQuery}`;
       const response = await fetch(url);
-      const data = await response.json();
+      const data = await response.json(); // Fetching data from TheMealDB API
 
       if (data.meals) {
         setRecipes(data.meals);
