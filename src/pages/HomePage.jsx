@@ -3,34 +3,43 @@ import RecipeCard from "../components/RecipeCard";
 import { useEffect, useState } from "react";
 import { getRandomColor } from "../lib/utils";
 
-const APP_ID = import.meta.env.VITE_APP_ID;
-const APP_KEY = import.meta.env.VITE_APP_KEY;
 const HomePage = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const fetchRecipes = async (searchQuery) => {
+  const [searchQuery, setSearchQuery] = useState("chicken");
+
+  const fetchRecipes = async (query) => {
     setLoading(true);
     setRecipes([]);
     try {
-      const response = await fetch(
-        `https://api.edamam.com/api/recipes/v2/?app_id=${APP_ID}&app_key=${APP_KEY}&q=${searchQuery}&type=public`
-      );
+      const finalQuery = query && query.trim() !== "" ? query : "chicken";
+      const url = `https://www.themealdb.com/api/json/v1/1/search.php?s=${finalQuery}`;
+      const response = await fetch(url);
       const data = await response.json();
-      console.log(data);
-      setRecipes(data.hits);
+
+      if (data.meals) {
+        setRecipes(data.meals);
+      } else {
+        setRecipes([]);
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching recipes from TheMealDB:", error);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchRecipes("chicken");
+    fetchRecipes(searchQuery);
   }, []);
+
   const handleSearchRecipe = (e) => {
     e.preventDefault();
-    fetchRecipes(e.target[0].value);
+    const query = e.target[0].value;
+    setSearchQuery(query);
+    fetchRecipes(query);
   };
+
   return (
     <div className="bg-[#faf9fb] p-10 flex-1">
       <div className="max-w-screen-lg mx-auto">
@@ -60,9 +69,20 @@ const HomePage = () => {
                 <div className="skeleton h-4 w-full"></div>
               </div>
             ))}
+
+          {!loading && recipes.length === 0 && (
+            <p className="text-center text-lg text-gray-600 col-span-full">
+              No recipes found for "{searchQuery}". Try something else!
+            </p>
+          )}
+
           {!loading &&
-            recipes.map(({ recipe }, index) => (
-              <RecipeCard key={index} recipe={recipe} {...getRandomColor()} />
+            recipes.map((meal) => (
+              <RecipeCard
+                key={meal.idMeal}
+                recipe={meal}
+                {...getRandomColor()}
+              />
             ))}
         </div>
       </div>
